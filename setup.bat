@@ -32,12 +32,14 @@ call venv\Scripts\activate
 echo [INFO] Upgrading pip...
 python -m pip install --upgrade pip
 
-echo [INFO] Installing PyTorch (CPU version) to save space/time...
-pip install torch torchvision torchaudio
-
-echo [INFO] Installing SoniTranslate requirements (Unified)...
+echo [INFO] Installing Unified Requirements...
 if exist "requirements.txt" (
     pip install -r requirements.txt
+    if %errorlevel% neq 0 (
+        echo [ERROR] Failed to install requirements.
+        pause
+        exit /b 1
+    )
 ) else (
     echo [WARNING] requirements.txt not found in root. Falling back to AIDoblador local files if present.
     if exist "AIDoblador\requirements_local.txt" pip install -r AIDoblador\requirements_local.txt

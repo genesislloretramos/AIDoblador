@@ -5,9 +5,7 @@ cd /d "%~dp0"
 
 echo =======================================================
 echo     Starting AIDoblador (Local CPU)
-...
-echo [INFO] Launching AIDoblador...
-...
+
 echo =======================================================
 
 :: Check venv
