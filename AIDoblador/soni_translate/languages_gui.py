@@ -4210,7 +4210,7 @@ language_data = {
 language_data["catalan"] = {
     "description": """
     ### 🎥 **Tradueix vídeos fàcilment amb AIDoblador!** 📽️
-    Puja un vídeo, àudio o proporciona un enllaç de YouTube. 📽️ Obté el notebook actualitzat del repositori oficial: `AIDoblador` <-  https://github.com/genesislloretramos/AIDoblador
+    Puja un vídeo, àudio o proporciona un enllaç de YouTube. 📽️ Obté el notebook actualitzat del repositori oficial: [AIDoblador](https://github.com/genesislloretramos/AIDoblador)
 
     Consulta la pestanya Ajuda per obtenir instruccions sobre com utilitzar-lo. Comencem a divertir-nos amb la traducció de vídeos! 🚀🎉
     """,
