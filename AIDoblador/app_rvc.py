@@ -12,6 +12,10 @@ _venv_scripts = os.path.join(os.path.dirname(_root), "venv", "Scripts")
 if os.path.exists(_venv_scripts) and _venv_scripts not in os.environ["PATH"]:
     os.environ["PATH"] = _venv_scripts + os.pathsep + os.environ["PATH"]
 
+# Map YOUR_HF_TOKEN to standard HF_TOKEN for automatic library authentication
+if os.environ.get("YOUR_HF_TOKEN") and not os.environ.get("HF_TOKEN"):
+    os.environ["HF_TOKEN"] = os.environ.get("YOUR_HF_TOKEN")
+
 def check_system_health():
     print("\n" + "="*50)
     print(" AIDoblador - SYSTEM HEALTH REPORT")
@@ -405,7 +409,11 @@ class SoniTranslate(SoniTrCache):
                 piper_enabled = True
                 logger.info("PIPER TTS enabled")
             except ImportError:
-                logger.warning("PIPER TTS component 'espeakbridge' is missing/incompatible. Piper disabled.")
+                logger.warning(
+                    "[HINT] PIPER TTS 'espeakbridge' component is missing/incompatible. "
+                    "This usually happens on Windows with Python 3.13. "
+                    "Piper is disabled; Edge TTS or Coqui XTTS will be used as fallbacks."
+                )
                 piper_enabled = False
         except Exception as error:
             logger.debug(str(error))
@@ -2110,6 +2118,7 @@ def create_gui(theme, logs_in_gui=False):
                         HFKEY = gr.Textbox(
                             visible=True,
                             label="HF Token",
+                            value=os.getenv("YOUR_HF_TOKEN", ""),
                             info=lg_conf["ht_token_info"],
                             placeholder=lg_conf["ht_token_ph"],
                         )
@@ -2117,6 +2126,7 @@ def create_gui(theme, logs_in_gui=False):
                         HFKEY = gr.Textbox(
                             visible=False,
                             label="HF Token",
+                            value=os.getenv("YOUR_HF_TOKEN", ""),
                             info=lg_conf["ht_token_info"],
                             placeholder=lg_conf["ht_token_ph"],
                         )
