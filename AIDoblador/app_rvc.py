@@ -365,7 +365,7 @@ class SoniTranslate(SoniTrCache):
             )
             os.environ["COQUI_TOS_AGREED"] = "1"
         except Exception as error:
-            logger.error(str(error)) # Changed from debug to error to see the issue
+            logger.error(f"Failed to initialize Coqui XTTS: {error}", exc_info=True)
             xtts_enabled = False
             logger.info("Coqui XTTS disabled")
 
