@@ -29,13 +29,13 @@ if not exist "venv" (
 echo [INFO] Installing dependencies in virtual environment...
 call venv\Scripts\activate
 
-echo [INFO] Upgrading pip...
-python -m pip install --upgrade pip
+echo [INFO] Upgrading pip, setuptools, and wheel...
+python -m pip install --upgrade pip setuptools wheel
 
 echo [INFO] Installing Unified Requirements...
 if exist "requirements.txt" (
     pip install -r requirements.txt
-    if %errorlevel% neq 0 (
+    if errorlevel 1 (
         echo [ERROR] Failed to install requirements.
         pause
         exit /b 1
@@ -51,6 +51,8 @@ echo [INFO] FORCE Installing Voice Cloning (XTTS/Fairseq)...
 echo [INFO] Providing best-effort installation for Python 3.13...
 :: Ensure build deps are present
 pip install cython numpy
+:: Manually install Fairseq with no-deps to avoid omegaconf conflicts
+pip install --no-deps git+https://github.com/facebookresearch/fairseq.git
 :: Force install Trainer and TTS from local patched folders for Py3.13 (No Build Isolation to use installed Numpy 2.x, No Deps to prevent downgrades)
 pip install --no-deps --no-build-isolation ./AIDoblador/Trainer_repo
 pip install --no-deps --no-build-isolation ./AIDoblador/TTS_repo
@@ -58,6 +60,6 @@ pip install --no-deps --no-build-isolation ./AIDoblador/TTS_repo
 echo.
 echo =======================================================
 echo     Setup Complete!
-echo     Run 'run_local.bat' to start the application.
+echo     Run 'run.bat' to start the application.
 echo =======================================================
 pause
