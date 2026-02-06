@@ -46,26 +46,66 @@ def verify_saved_file_and_size(filename):
 def error_handling_in_tts(error, segment, TRANSLATE_AUDIO_TO, filename):
     traceback.print_exc()
     logger.error(f"Error: {str(error)}")
+    
+    # Specific hint for Piper on Windows/Py3.13
+    if "espeakbridge" in str(error):
+        logger.warning("Piper TTS (VITS) requires 'espeakbridge' which is often missing or incompatible on Windows with Python 3.13. Falling back to alternatives.")
+
     try:
+        # 1. Try Edge TTS as first fallback (Better quality)
+        try:
+            import edge_tts
+            import asyncio
+            
+            # Find a suitable voice for the language
+            async def get_edge_fallback():
+                voices = await edge_tts.list_voices()
+                locale_prefix = TRANSLATE_AUDIO_TO.split(' ')[0].lower() # From "Catalan (ca)" -> "catalan"
+                # Some target_language formats are "English (en)"
+                if '(' in TRANSLATE_AUDIO_TO:
+                    lang_code = TRANSLATE_AUDIO_TO.split('(')[1].split(')')[0].lower()
+                else:
+                    lang_code = TRANSLATE_AUDIO_TO.lower()
+
+                # Try to find a voice for this locale
+                voice = next((v['ShortName'] for v in voices if v['Locale'].startswith(lang_code)), None)
+                if not voice:
+                    # Fallback to English if no match found
+                    voice = next((v['ShortName'] for v in voices if v['Locale'].startswith("en")), "en-US-AndrewMultilingualNeural")
+                
+                if voice:
+                    temp_mp3 = filename.replace(".ogg", ".mp3")
+                    communicate = edge_tts.Communicate(segment["text"], voice)
+                    await communicate.save(temp_mp3)
+                    return temp_mp3
+                return None
+
+            temp_file = asyncio.run(get_edge_fallback())
+            if temp_file and os.path.exists(temp_file):
+                audio_data, samplerate = sf.read(temp_file)
+                audio_data = pad_array(audio_data, samplerate)
+                write_chunked(filename, audio_data, samplerate, format="ogg", subtype="vorbis")
+                os.remove(temp_file)
+                logger.warning(f'TTS auxiliary (Edge TTS) utilized for: {segment["tts_name"]}')
+                verify_saved_file_and_size(filename)
+                return
+        except Exception as edge_err:
+            logger.debug(f"Edge TTS fallback failed: {edge_err}")
+
+        # 2. Try gTTS as second fallback (Reliable but lower quality)
+        from gtts import gTTS
         from tempfile import TemporaryFile
 
         tts = gTTS(segment["text"], lang=fix_code_language(TRANSLATE_AUDIO_TO))
-        # tts.save(filename)
         f = TemporaryFile()
         tts.write_to_fp(f)
-
-        # Reset the file pointer to the beginning of the file
         f.seek(0)
-
-        # Read audio data from the TemporaryFile using soundfile
         audio_data, samplerate = sf.read(f)
-        f.close()  # Close the TemporaryFile
-        write_chunked(
-            filename, audio_data, samplerate, format="ogg", subtype="vorbis"
-        )
+        f.close()
+        write_chunked(filename, audio_data, samplerate, format="ogg", subtype="vorbis")
 
         logger.warning(
-            'TTS auxiliary will be utilized '
+            'TTS auxiliary (gTTS) utilized '
             f'rather than TTS: {segment["tts_name"]}'
         )
         verify_saved_file_and_size(filename)
