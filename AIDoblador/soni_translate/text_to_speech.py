@@ -737,7 +737,11 @@ def load_piper_model(
     update_voices: bool = False,
 ):
     from piper import PiperVoice
-    from piper.download import ensure_voice_exists, find_voice, get_voices
+    from piper import PiperVoice
+    try:
+        from piper.download import ensure_voice_exists, find_voice, get_voices
+    except ImportError:
+        from .piper_download_shim import ensure_voice_exists, find_voice, get_voices
 
     try:
         import onnxruntime as rt
