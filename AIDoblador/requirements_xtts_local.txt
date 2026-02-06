@@ -1,0 +1,53 @@
+# core deps
+numpy
+cython
+scipy
+inflect
+tqdm
+anyascii
+pyyaml
+fsspec
+aiohttp
+packaging
+mutagen
+# deps for examples
+flask
+# deps for inference
+pysbd
+# deps for notebooks
+umap-learn
+pandas
+# deps for training
+matplotlib
+# coqui stack
+# git+https://github.com/coqui-ai/Trainer.git
+# config management
+coqpit
+# chinese g2p deps
+jieba
+pypinyin
+# korean
+hangul_romanize
+# gruut+supported langs
+gruut[de,es,fr]
+# deps for korean
+jamo
+nltk
+g2pkk
+# deps for bangla
+bangla
+bnnumerizer
+bnunicodenormalizer
+#deps for tortoise
+einops
+transformers
+#deps for bark
+encodec
+# deps for XTTS
+unidecode
+num2words
+spacy[ja]
+langsegment
+
+# after this (handled in bat file)
+# pip install TTS==0.21.1 --no-deps

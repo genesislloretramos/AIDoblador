@@ -1,0 +1,19 @@
+praat-parselmouth>=0.4.3
+pyworld
+faiss-cpu
+torchcrepe
+ffmpeg-python>=0.2.0
+git+https://github.com/facebookresearch/fairseq.git
+gdown
+rarfile
+transformers
+accelerate
+optimum
+sentencepiece
+srt
+git+https://github.com/R3gm/openvoice_package.git@lite
+openai
+tiktoken
+# Documents
+pypdf
+python-docx

@@ -1,0 +1,33 @@
+# Core dependencies for SoniTranslate
+gradio
+ipython
+gTTS
+nest_asyncio
+yt_dlp
+pydub
+librosa
+deep_translator
+edge-tts
+moviepy
+transformers
+accelerate
+soundfile
+numpy
+pandas
+
+# AI Models (CPU compatible, but slower)
+# Using standard torch (pip will install CPU or CUDA depending on system, but we force CPU in bat if needed)
+torch
+torchaudio
+torchvision
+
+# Speech Recognition & Diarization
+# WhisperX requires compatible torch
+whisperx
+pyannote.audio>=3.1.1
+
+# OnnxRuntime (CPU version)
+onnxruntime
+
+# Text to Speech
+piper-tts
