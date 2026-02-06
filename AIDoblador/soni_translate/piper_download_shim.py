@@ -8,6 +8,45 @@ from piper.download_voices import download_voice as piper_download_voice, VOICES
 
 logger = logging.getLogger(__name__)
 
+PIPER_CLI_URL = "https://github.com/rhasspy/piper/releases/download/v1.2.0/piper_windows_amd64.zip"
+PIPER_CLI_DIR = Path("PIPER_CLI")
+PIPER_EXE = PIPER_CLI_DIR / "piper" / "piper.exe"
+
+def ensure_piper_cli():
+    """Ensures the Piper CLI executable exists on Windows."""
+    if os.name != "nt":
+        return None
+    
+    if PIPER_EXE.exists():
+        return str(PIPER_EXE)
+    
+    logger.info("Piper CLI not found. Downloading...")
+    PIPER_CLI_DIR.mkdir(parents=True, exist_ok=True)
+    
+    import zipfile
+    from urllib.request import urlretrieve
+    
+    zip_path = PIPER_CLI_DIR / "piper_windows.zip"
+    try:
+        logger.info(f"Downloading Piper CLI from {PIPER_CLI_URL}...")
+        urlretrieve(PIPER_CLI_URL, zip_path)
+        
+        logger.info("Extracting Piper CLI...")
+        with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+            zip_ref.extractall(PIPER_CLI_DIR)
+        
+        os.remove(zip_path) # Clean up zip
+        
+        if PIPER_EXE.exists():
+            logger.info("Piper CLI installed successfully.")
+            return str(PIPER_EXE)
+        else:
+            logger.error("Piper CLI extraction failed - piper.exe not found.")
+            return None
+    except Exception as e:
+        logger.error(f"Failed to download/install Piper CLI: {e}")
+        return None
+
 def get_voices(download_dir, update_voices=False):
     """
     Retrieves available voices from the official source.

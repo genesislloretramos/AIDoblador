@@ -403,18 +403,17 @@ class SoniTranslate(SoniTrCache):
     def get_tts_voice_list(self):
         try:
             from piper import PiperVoice  # noqa
-            # Proactive check for espeakbridge (broken on Win/Py3.13)
             try:
                 from piper import espeakbridge # noqa
                 piper_enabled = True
-                logger.info("PIPER TTS enabled")
+                logger.info("PIPER TTS enabled (Native)")
             except ImportError:
-                logger.warning(
-                    "[HINT] PIPER TTS 'espeakbridge' component is missing/incompatible. "
-                    "This usually happens on Windows with Python 3.13. "
-                    "Piper is disabled; Edge TTS or Coqui XTTS will be used as fallbacks."
-                )
-                piper_enabled = False
+                if platform.system() == "Windows":
+                    piper_enabled = True
+                    logger.info("PIPER TTS enabled (CLI Fallback mode)")
+                else:
+                    logger.warning("PIPER TTS component 'espeakbridge' is missing/incompatible. Piper disabled.")
+                    piper_enabled = False
         except Exception as error:
             logger.debug(str(error))
             piper_enabled = False

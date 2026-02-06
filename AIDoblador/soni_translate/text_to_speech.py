@@ -708,6 +708,57 @@ def segments_coqui_tts(
 # PIPER TTS
 # =====================================
 
+class PiperVoiceCLI:
+    """Shim class to mimic PiperVoice using the standalone executable."""
+    def __init__(self, model_path, config_path, piper_exe):
+        self.model_path = model_path
+        self.config_path = config_path
+        self.piper_exe = piper_exe
+        
+        # Load sample rate from config
+        try:
+            with open(config_path, "r", encoding="utf-8") as f:
+                config = json.load(f)
+                self.config = type('Config', (), {'sample_rate': config.get("audio", {}).get("sample_rate", 22050)})
+        except Exception:
+            self.config = type('Config', (), {'sample_rate': 22050})
+
+    def synthesize(self, text, syn_config=None):
+        """Synthesizes text using the piper executable and returns a chunk."""
+        import subprocess
+        import tempfile
+        import soundfile as sf
+        
+        with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp:
+            tmp_path = tmp.name
+        
+        try:
+            # Command: piper.exe -m model.onnx -c config.json -f output.wav
+            command = [
+                self.piper_exe,
+                "-m", str(self.model_path),
+                "-c", str(self.config_path),
+                "-f", tmp_path
+            ]
+            
+            # Additional args if provided (some mapping might be needed)
+            # if syn_config:
+            #     if syn_config.length_scale: command.extend(["--length_scale", str(syn_config.length_scale)])
+            
+            subprocess.run(command, input=text.encode("utf-8"), check=True, creationflags=0x08000000 if os.name == "nt" else 0)
+            
+            audio_data, _ = sf.read(tmp_path, dtype='int16')
+            
+            class AudioChunk:
+                def __init__(self, data):
+                    self.audio_int16_array = data
+            
+            return [AudioChunk(audio_data)]
+            
+        finally:
+            if os.path.exists(tmp_path):
+                try: os.remove(tmp_path)
+                except: pass
 
 def piper_tts_voices_list():
     file_path = download_manager(
@@ -755,7 +806,19 @@ def load_piper_model(
     try:
         from piper.download import ensure_voice_exists, find_voice, get_voices
     except ImportError:
-        from .piper_download_shim import ensure_voice_exists, find_voice, get_voices
+        from .piper_download_shim import ensure_voice_exists, find_voice, get_voices, ensure_piper_cli
+
+    # Attempt to load native Piper first
+    try:
+        from piper import PiperVoice
+        native_piper_available = True
+    except ImportError:
+        native_piper_available = False
+
+    # Check for CLI Fallback if native is unavailable or we are on Windows (to be safe/robust)
+    piper_exe = None
+    if not native_piper_available or platform.system() == "Windows":
+        piper_exe = ensure_piper_cli()
 
     try:
         import onnxruntime as rt
@@ -803,7 +866,14 @@ def load_piper_model(
         )
 
     # Load voice
-    voice = PiperVoice.load(model, config_path=config, use_cuda=cuda)
+    if native_piper_available and not piper_exe:
+        logger.debug("Loading Piper native voice model")
+        voice = PiperVoice.load(model, config_path=config, use_cuda=cuda)
+    elif piper_exe:
+        logger.info(f"Using Piper CLI Fallback mode: {piper_exe}")
+        voice = PiperVoiceCLI(model, config, piper_exe)
+    else:
+        raise TTS_OperationError("Piper TTS is not available (neither library nor CLI found)")
 
     return voice
 
