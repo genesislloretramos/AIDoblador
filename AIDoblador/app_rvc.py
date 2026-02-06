@@ -145,35 +145,7 @@ import argparse
 import time
 import hashlib
 import sys
-import multiprocessing as mp
-
-# DEBUG: Early TTS Import Check
-try:
-    print(f"[DEBUG] sys.path: {sys.path}")
-    import TTS
-    print(f"[DEBUG] TTS found at: {TTS.__file__}")
-    import TTS.utils
-    print(f"[DEBUG] TTS.utils found at: {TTS.utils.__file__}")
-    
-    # Check for confusing file/dir
-    print(f"[DEBUG] TTS.utils dir content: {os.listdir(os.path.dirname(TTS.utils.__file__))}")
-
-    print("[DEBUG] Attempting to import TTS.utils.audio.processor...")
-    import TTS.utils.audio.processor
-    print(f"[DEBUG] TTS.utils.audio.processor found at: {TTS.utils.audio.processor.__file__}")
-
-    import TTS.utils.audio
-    print(f"[DEBUG] TTS.utils.audio found at: {TTS.utils.audio.__file__}")
-except ImportError as e:
-    print(f"[DEBUG] Early TTS import failed: {e}")
-    import traceback
-    traceback.print_exc()
-except Exception as e:
-    print(f"[DEBUG] Early TTS Unexpected error: {e}")
-    import traceback
-    traceback.print_exc()
-# END DEBUG
-
+# ==================================================================================
 directories = [
     "downloads",
     "logs",
