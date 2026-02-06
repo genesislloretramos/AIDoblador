@@ -499,7 +499,7 @@ def create_wav_file_vc(
     )
 
     output_dir = os.path.join(BASE_DIR, "clean_song_output")  # remove content
-    # remove_directory_contents(output_dir)
+    remove_directory_contents(output_dir)
 
     if start or end:
         # Cut file
