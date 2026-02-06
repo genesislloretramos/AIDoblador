@@ -154,6 +154,14 @@ try:
     print(f"[DEBUG] TTS found at: {TTS.__file__}")
     import TTS.utils
     print(f"[DEBUG] TTS.utils found at: {TTS.utils.__file__}")
+    
+    # Check for confusing file/dir
+    print(f"[DEBUG] TTS.utils dir content: {os.listdir(os.path.dirname(TTS.utils.__file__))}")
+
+    print("[DEBUG] Attempting to import TTS.utils.audio.processor...")
+    import TTS.utils.audio.processor
+    print(f"[DEBUG] TTS.utils.audio.processor found at: {TTS.utils.audio.processor.__file__}")
+
     import TTS.utils.audio
     print(f"[DEBUG] TTS.utils.audio found at: {TTS.utils.audio.__file__}")
 except ImportError as e:
