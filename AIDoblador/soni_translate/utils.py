@@ -355,8 +355,31 @@ def load_file_from_url(
     if not os.path.exists(cached_file):
         logger.info(f'Downloading: "{url}" to {cached_file}\n')
         from torch.hub import download_url_to_file
+        import webbrowser
 
-        download_url_to_file(url, cached_file, progress=progress)
+        while True:
+            try:
+                download_url_to_file(url, cached_file, progress=progress)
+                if os.path.exists(cached_file) and os.path.getsize(cached_file) > 0:
+                    break
+                else:
+                    raise Exception("File downloaded but empty or missing.")
+            except Exception as e:
+                logger.error(f"Download failed: {str(e)}")
+                print(f"\n\n[ERROR] Failed to download: {url}")
+                print("This might be because you need to accept a license agreement on Hugging Face.")
+                print(f"Opening URL in browser: {url}")
+                
+                try:
+                    webbrowser.open(url)
+                except:
+                    pass
+                
+                print(">> Please accept the license if required, then return here.")
+                response = input(">> Press [Enter] to retry, or type 'skip' to abort: ").strip().lower()
+                if response == 'skip':
+                    logger.warning(f"Skipping download of {url}")
+                    break
     else:
         logger.debug(cached_file)
 

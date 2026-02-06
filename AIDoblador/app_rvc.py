@@ -1487,7 +1487,7 @@ title = "<center><strong><font size='7'>📽️ AIDoblador 🈷️</font></stron
 
 
 def create_gui(theme, logs_in_gui=False):
-    with gr.Blocks(theme=theme) as app:
+    with gr.Blocks(theme=theme, title="AIDoblador") as app:
         gr.Markdown(title)
         gr.Markdown(lg_conf["description"])
 

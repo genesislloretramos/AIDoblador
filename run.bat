@@ -44,7 +44,7 @@ goto Launch
 
 :Launch
 echo.
-echo [INFO] Launching SoniTranslate...
+echo [INFO] Launching AIDoblador...
 echo [INFO] Open your browser at http://127.0.0.1:7860 when ready.
 echo.
 
