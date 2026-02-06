@@ -795,16 +795,28 @@ def load_piper_model(
 
 
 def synthesize_text_to_audio_np_array(voice, text, synthesize_args):
-    audio_stream = voice.synthesize_stream_raw(text, **synthesize_args)
+    from piper.config import SynthesisConfig
 
-    # Collect the audio bytes into a single NumPy array
-    audio_data = b""
-    for audio_bytes in audio_stream:
-        audio_data += audio_bytes
+    # Mapping synthesize_args to SynthesisConfig
+    # Note: noise_w in soni_translate corresponds to noise_w_scale in piper SynthesisConfig
+    syn_config = SynthesisConfig(
+        speaker_id=synthesize_args.get("speaker_id"),
+        length_scale=synthesize_args.get("length_scale"),
+        noise_scale=synthesize_args.get("noise_scale"),
+        noise_w_scale=synthesize_args.get("noise_w"),
+    )
 
-    # Ensure correct data type and convert audio bytes to NumPy array
-    audio_np = np.frombuffer(audio_data, dtype=np.int16)
-    return audio_np
+    audio_chunks = voice.synthesize(text, syn_config=syn_config)
+
+    # Collect audio from all chunks
+    audio_np_list = []
+    for chunk in audio_chunks:
+        audio_np_list.append(chunk.audio_int16_array)
+
+    if not audio_np_list:
+        return np.array([], dtype=np.int16)
+
+    return np.concatenate(audio_np_list)
 
 
 def segments_vits_onnx_tts(filtered_onnx_vits_segments, TRANSLATE_AUDIO_TO):
