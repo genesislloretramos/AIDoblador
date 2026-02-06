@@ -203,7 +203,7 @@ logs/
 weights/
 clean_song_output/
 audio2/
-audio/
+# audio/  <-- Removed to allow TTS/utils/audio tracking
 outputs/
 processed/
 OPENVOICE_MODELS/
