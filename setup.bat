@@ -54,8 +54,8 @@ pip install cython numpy
 :: Manually install Fairseq with no-deps to avoid omegaconf conflicts
 pip install --no-deps git+https://github.com/facebookresearch/fairseq.git
 :: Force install Trainer and TTS from local patched folders for Py3.13 (No Build Isolation to use installed Numpy 2.x, No Deps to prevent downgrades)
-pip install --no-deps --no-build-isolation ./AIDoblador/Trainer_repo
-pip install --no-deps --no-build-isolation ./AIDoblador/TTS_repo
+pip install --no-deps --no-build-isolation -e ./AIDoblador/Trainer_repo
+pip install --no-deps --no-build-isolation -e ./AIDoblador/TTS_repo
 
 echo.
 echo =======================================================
