@@ -35,19 +35,51 @@ def get_video_codec(video_file):
         process = subprocess.Popen(
             command,
             stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
             creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0,
         )
         output, _ = process.communicate()
         codec_info = json.loads(output.decode('utf-8'))
-        codec_name = codec_info['streams'][0]['codec_name']
-        return codec_name
-    except Exception as error:
-        logger.debug(str(error))
+        if 'streams' in codec_info and len(codec_info['streams']) > 0:
+            codec_name = codec_info['streams'][0]['codec_name']
+            return codec_name
         return None
+    except Exception as error:
+        logger.debug(f"Codec detection failed: {str(error)}")
+        return None
+
+
+def verify_media_has_audio(media_file):
+    """
+    Checks if the media file contains at least one audio stream.
+    """
+    command_base = rf'ffprobe -v error -select_streams a -show_entries stream=index -of json "{media_file}"'
+    command = shlex.split(command_base)
+    try:
+        process = subprocess.Popen(
+            command,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0,
+        )
+        output, _ = process.communicate()
+        info = json.loads(output.decode('utf-8'))
+        if 'streams' in info and len(info['streams']) > 0:
+            return True
+        return False
+    except Exception as error:
+        logger.debug(f"Audio stream verification failed: {str(error)}")
+        return False
 
 
 def audio_preprocessor(preview, base_audio, audio_wav, use_cuda=False):
     base_audio = base_audio.strip()
+    if not os.path.exists(base_audio):
+        raise OperationFailedError(f"Input file not found: {base_audio}")
+
+    if not verify_media_has_audio(base_audio):
+        raise OperationFailedError(f"The file {base_audio} does not contain any audio stream.")
+
     previous_files_to_remove = [audio_wav]
     remove_files(previous_files_to_remove)
 
@@ -86,6 +118,8 @@ def audio_video_preprocessor(
     remove_files(previous_files_to_remove)
 
     if os.path.exists(video):
+        if not verify_media_has_audio(video):
+             logger.warning(f"The file {video} might not contain an audio stream. Proceeding anyway.")
         if preview:
             logger.warning(
                 "Creating a preview video of 10 seconds, "

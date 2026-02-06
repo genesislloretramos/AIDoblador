@@ -1,8 +1,63 @@
 # ==================================================================================
-# MONKEYPATCHES FOR PYTHON 3.13 & NEW LIBRARY COMPATIBILITY
+# RUNTIME ENVIRONMENT SETUP & COMPATIBILITY PATCHES
 # ==================================================================================
+import os
+import sys
+import platform
+import subprocess
 
-# 1. Patch hf_hub_download to handle deprecated 'use_auth_token' (CRITICAL: Must be before other imports)
+# Add venv/Scripts to PATH to ensure edge-tts and other CLI tools are found
+_root = os.path.dirname(os.path.abspath(__file__))
+_venv_scripts = os.path.join(os.path.dirname(_root), "venv", "Scripts")
+if os.path.exists(_venv_scripts) and _venv_scripts not in os.environ["PATH"]:
+    os.environ["PATH"] = _venv_scripts + os.pathsep + os.environ["PATH"]
+
+def check_system_health():
+    print("\n" + "="*50)
+    print(" AIDoblador - SYSTEM HEALTH REPORT")
+    print("="*50)
+    
+    # 1. Check FFmpeg
+    try:
+        subprocess.run(["ffmpeg", "-version"], capture_output=True, check=True, creationflags=0x08000000 if sys.platform == "win32" else 0)
+        print("[✓] FFmpeg: Found and functional")
+    except Exception:
+        print("[✗] FFmpeg: NOT FOUND! Please install FFmpeg and add it to PATH.")
+        print("    Download: https://ffmpeg.org/download.html")
+
+    # 2. Check Directories & Permissions
+    dirs = ["outputs", "audio", "logs", "weights"]
+    for d in dirs:
+        if not os.path.exists(d): os.makedirs(d, exist_ok=True)
+        if os.access(d, os.W_OK):
+            print(f"[✓] Directory '{d}': Writable")
+        else:
+            print(f"[✗] Directory '{d}': NOT WRITABLE!")
+
+    # 3. Check GPU
+    import torch
+    if torch.cuda.is_available():
+        print(f"[✓] GPU: {torch.cuda.get_device_name(0)}")
+    else:
+        print("[!] GPU: NOT FOUND (Running in CPU mode)")
+    
+    # 4. Check Disk Space (Requirement: at least 2GB free)
+    try:
+        import shutil
+        total, used, free = shutil.disk_usage(".")
+        free_gb = free // (2**30)
+        if free_gb < 2:
+            print(f"[✗] Disk Space: CRITICAL ({free_gb}GB free). Need at least 2GB.")
+        else:
+            print(f"[✓] Disk Space: {free_gb}GB free")
+    except Exception:
+        pass
+
+    print("="*50 + "\n")
+
+check_system_health()
+
+# 1. Patch hf_hub_download to handle deprecated 'use_auth_token'
 try:
     import huggingface_hub
     _original_hf_hub_download = huggingface_hub.hf_hub_download
@@ -344,9 +399,14 @@ class SoniTranslate(SoniTrCache):
     def get_tts_voice_list(self):
         try:
             from piper import PiperVoice  # noqa
-
-            piper_enabled = True
-            logger.info("PIPER TTS enabled")
+            # Proactive check for espeakbridge (broken on Win/Py3.13)
+            try:
+                from piper import espeakbridge # noqa
+                piper_enabled = True
+                logger.info("PIPER TTS enabled")
+            except ImportError:
+                logger.warning("PIPER TTS component 'espeakbridge' is missing/incompatible. Piper disabled.")
+                piper_enabled = False
         except Exception as error:
             logger.debug(str(error))
             piper_enabled = False
@@ -435,13 +495,13 @@ class SoniTranslate(SoniTrCache):
         batch_size=4,
         compute_type="auto",
         origin_language="Automatic detection",
-        target_language="English (en)",
+        target_language="Catalan (ca)",
         min_speakers=1,
         max_speakers=1,
-        tts_voice00="en-US-EmmaMultilingualNeural-Female",
-        tts_voice01="en-US-AndrewMultilingualNeural-Male",
-        tts_voice02="en-US-AvaMultilingualNeural-Female",
-        tts_voice03="en-US-BrianMultilingualNeural-Male",
+        tts_voice00="ca-ES-JoanaNeural-Female",
+        tts_voice01="ca-ES-EnricNeural-Male",
+        tts_voice02="ca-ES-JoanaNeural-Female",
+        tts_voice03="ca-ES-EnricNeural-Male",
         tts_voice04="de-DE-SeraphinaMultilingualNeural-Female",
         tts_voice05="de-DE-FlorianMultilingualNeural-Male",
         tts_voice06="fr-FR-VivienneMultilingualNeural-Female",
@@ -1553,7 +1613,7 @@ def create_gui(theme, logs_in_gui=False):
                     )
                     TRANSLATE_AUDIO_TO = gr.Dropdown(
                         LANGUAGES_LIST[1:],
-                        value="English (en)",
+                        value="Catalan (ca)",
                         label=lg_conf["tat_label"],
                         info=lg_conf["tat_info"],
                     )
@@ -1588,14 +1648,14 @@ def create_gui(theme, logs_in_gui=False):
 
                     tts_voice00 = gr.Dropdown(
                         SoniTr.tts_info.tts_list(),
-                        value="en-US-EmmaMultilingualNeural-Female",
+                        value="ca-ES-JoanaNeural-Female",
                         label=lg_conf["sk1"],
                         visible=True,
                         interactive=True,
                     )
                     tts_voice01 = gr.Dropdown(
                         SoniTr.tts_info.tts_list(),
-                        value="en-US-AndrewMultilingualNeural-Male",
+                        value="ca-ES-EnricNeural-Male",
                         label=lg_conf["sk2"],
                         visible=True,
                         interactive=True,
@@ -2151,7 +2211,7 @@ def create_gui(theme, logs_in_gui=False):
                             )
                             docs_TRANSLATE_TO = gr.Dropdown(
                                 LANGUAGES_LIST[1:],
-                                value="English (en)",
+                                value="Catalan (ca)",
                                 label=lg_conf["tat_label"],
                                 info=lg_conf["tat_info"],
                             )
@@ -2828,8 +2888,8 @@ def create_parser():
     parser.add_argument(
         "--language",
         type=str,
-        default="english",
-        help=" Select the language of the interface: english, spanish",
+        default="catalan",
+        help=" Select the language of the interface: english, spanish, catalan",
     )
     parser.add_argument(
         "--cpu_mode",

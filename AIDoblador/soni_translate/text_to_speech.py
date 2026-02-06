@@ -44,7 +44,6 @@ def verify_saved_file_and_size(filename):
 
 
 def error_handling_in_tts(error, segment, TRANSLATE_AUDIO_TO, filename):
-    traceback.print_exc()
     logger.error(f"Error: {str(error)}")
     
     # Specific hint for Piper on Windows/Py3.13
@@ -153,41 +152,16 @@ def pad_array(array, sr):
 
 def edge_tts_voices_list():
     try:
-        completed_process = subprocess.run(
-            ["edge-tts", "--list-voices"], capture_output=True, text=True
-        )
-        lines = completed_process.stdout.strip().split("\n")
-    except Exception as error:
-        logger.debug(str(error))
-        lines = []
-
-    voices = []
-    for line in lines:
-        if line.startswith("Name: "):
-            voice_entry = {}
-            voice_entry["Name"] = line.split(": ")[1]
-        elif line.startswith("Gender: "):
-            voice_entry["Gender"] = line.split(": ")[1]
-            voices.append(voice_entry)
-
-    formatted_voices = [
-        f"{entry['Name']}-{entry['Gender']}" for entry in voices
-    ]
-
-    if not formatted_voices:
-        logger.warning(
-            "The list of Edge TTS voices could not be obtained, "
-            "switching to an alternative method"
-        )
+        # Use library-based discovery directly for speed and reliability
         tts_voice_list = asyncio.new_event_loop().run_until_complete(
             edge_tts.list_voices()
         )
         formatted_voices = sorted(
             [f"{v['ShortName']}-{v['Gender']}" for v in tts_voice_list]
         )
-
-    if not formatted_voices:
-        logger.error("Can't get EDGE TTS - list voices")
+    except Exception as error:
+        logger.debug(f"Edge TTS listing error: {error}")
+        formatted_voices = []
 
     return formatted_voices
 

@@ -48,7 +48,8 @@ SUBTITLE_EXTENSIONS = [
 
 
 def run_command(command):
-    logger.debug(command)
+    logger.debug(f"Running command: {command}")
+    command_str = command if isinstance(command, str) else " ".join(command)
     if isinstance(command, str):
         command = shlex.split(command)
 
@@ -59,13 +60,19 @@ def run_command(command):
         if sys.platform == "win32"
         else 0,
     }
-    process_command = subprocess.Popen(command, **sub_params)
-    output, errors = process_command.communicate()
-    if (
-        process_command.returncode != 0
-    ):  # or not os.path.exists(mono_path) or os.path.getsize(mono_path) == 0:
-        logger.error("Error comnand")
-        raise Exception(errors.decode())
+    try:
+        process_command = subprocess.Popen(command, **sub_params)
+        output, errors = process_command.communicate()
+        if process_command.returncode != 0:
+            error_msg = errors.decode(errors='replace') if errors else "Unknown error"
+            logger.error(f"Command failed with code {process_command.returncode}: {command_str}")
+            logger.error(f"Error output: {error_msg}")
+            raise Exception(f"Command failed: {command_str}\nError: {error_msg}")
+        return output.decode(errors='replace') if output else ""
+    except Exception as e:
+        if "No tal archivo" in str(e) or "not found" in str(e) or "FileNotFoundError" in str(e):
+            logger.critical(f"Executable not found for command: {command[0]}")
+        raise e
 
 
 def write_chunked(
