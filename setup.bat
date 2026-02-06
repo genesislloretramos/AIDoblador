@@ -1,7 +1,7 @@
 @echo off
 setlocal
 cd /d "%~dp0"
-cd AIDoblador
+
 
 echo =======================================================
 echo     AIDoblador Local Setup (CPU Mode)

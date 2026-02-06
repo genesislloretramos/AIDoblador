@@ -1,7 +1,7 @@
 @echo off
 setlocal
 cd /d "%~dp0"
-cd AIDoblador
+
 
 echo =======================================================
 echo     Starting AIDoblador (Local CPU)
@@ -51,6 +51,7 @@ echo [INFO] Open your browser at http://127.0.0.1:7860 when ready.
 echo.
 
 :: cd SoniTranslate (Already in root)
+cd AIDoblador
 python app_rvc.py --cpu_mode --language catalan
 
 if %errorlevel% neq 0 (
