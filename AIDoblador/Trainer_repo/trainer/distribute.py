@@ -5,6 +5,7 @@ import os
 import pathlib
 import subprocess
 import time
+import sys
 
 from trainer import TrainerArgs, logger
 
@@ -51,7 +52,7 @@ def distribute():
         command[-1] = f"--rank={rank}"
         # prevent stdout for processes with rank != 0
         stdout = None
-        p = subprocess.Popen(["python3"] + command, stdout=stdout, env=my_env)  # pylint: disable=consider-using-with
+        p = subprocess.Popen([sys.executable] + command, stdout=stdout, env=my_env)  # pylint: disable=consider-using-with
         processes.append(p)
         logger.info(command)
 

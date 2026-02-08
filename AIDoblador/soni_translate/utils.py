@@ -154,10 +154,10 @@ def manual_download(url, dst):
         logger.info("Drive url")
         if "folders" in url:
             logger.info("folder")
-            os.system(f'gdown --folder "{url}" -O {dst} --fuzzy -c')
+            os.system(f'"{sys.executable}" -m gdown --folder "{url}" -O {dst} --fuzzy -c')
         else:
             logger.info("single")
-            os.system(f'gdown "{url}" -O {dst} --fuzzy -c')
+            os.system(f'"{sys.executable}" -m gdown "{url}" -O {dst} --fuzzy -c')
     elif "huggingface" in url:
         logger.info("HuggingFace url")
         if "/blob/" in url or "/resolve/" in url:
@@ -165,7 +165,7 @@ def manual_download(url, dst):
                 url = url.replace("/blob/", "/resolve/")
             download_manager(url=url, path=dst, overwrite=True, progress=True)
         else:
-            os.system(f"git clone {url} {dst+'repo/'}")
+            subprocess.run(["git", "clone", url, dst+'repo/'], check=True)
     elif "http" in url:
         logger.info("URL")
         download_manager(url=url, path=dst, overwrite=True, progress=True)

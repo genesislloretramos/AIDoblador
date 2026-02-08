@@ -24,6 +24,7 @@ import os
 import subprocess
 import sys
 import zipfile
+import shutil
 
 import pandas
 import soundfile as sf
@@ -102,7 +103,7 @@ def download_and_extract(directory, subset, urls):
         with zipfile.ZipFile(zip_filepath, "r") as zfile:
             zfile.extractall(directory)
             extract_path_ori = os.path.join(directory, zfile.infolist()[0].filename)
-            subprocess.call("mv %s %s" % (extract_path_ori, extract_path), shell=True)
+            shutil.move(extract_path_ori, extract_path)
     finally:
         # os.remove(zip_filepath)
         pass
